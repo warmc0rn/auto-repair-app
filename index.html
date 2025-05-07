@@ -1,257 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vehicle Lookup</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-    h2 {
-      text-align: center;
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    select, input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      margin-top: 15px;
-      padding: 10px;
-      width: 100%;
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #0056b3;
-    }
-    .info-box {
-      margin-top: 20px;
-      background-color: #e9ecef;
-      padding: 10px;
-      border-radius: 5px;
-    }
-    .section {
-      margin-top: 20px;
-    }
-    ul {
-      padding-left: 20px;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vehicle Maintenance App</title>
+  <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
   <div class="container">
-    <h2>Vehicle Lookup</h2>
+    <h1>Vehicle Maintenance Guide</h1>
+    <form id="vehicle-form">
+      <label for="vin">Enter VIN (optional):</label>
+      <input type="text" id="vin" placeholder="e.g., 1HGCM82633A004352" />
+      <button type="button" id="decode-vin">Decode VIN</button>
+      <hr/>
+      <label for="year">Year:</label>
+      <select id="year"></select>
 
-    <label for="vin">Enter VIN</label>
-    <input type="text" id="vin" placeholder="17-character VIN">
-    <button id="lookupVin">Lookup VIN</button>
+      <label for="make">Make:</label>
+      <select id="make" disabled></select>
 
-    <label for="year">Select Year</label>
-    <select id="year">
-      <option value="">Select Year</option>
-    </select>
+      <label for="model">Model:</label>
+      <select id="model" disabled></select>
 
-    <label for="make">Select Make</label>
-    <select id="make" disabled>
-      <option value="">Select Make</option>
-    </select>
+      <label for="trim">Trim:</label>
+      <select id="trim" disabled></select>
 
-    <label for="model">Select Model</label>
-    <select id="model" disabled>
-      <option value="">Select Model</option>
-    </select>
-
-    <label for="trim">Trim</label>
-    <input type="text" id="trim" disabled>
-
-    <label for="engine">Engine</label>
-    <input type="text" id="engine" disabled>
-
-    <button id="showResults">Show Maintenance & Repairs</button>
-
-    <div class="info-box" id="vehicleDetails"></div>
-
-    <div class="section" id="maintenanceSection"></div>
+      <button type="button" id="submit">View Maintenance</button>
+    </form>
+    <div id="maintenance-results" class="results"></div>
   </div>
-
-  <script>
-    const yearDropdown = document.getElementById("year");
-    const makeDropdown = document.getElementById("make");
-    const modelDropdown = document.getElementById("model");
-    const vinInput = document.getElementById("vin");
-    const lookupVinBtn = document.getElementById("lookupVin");
-    const showResultsBtn = document.getElementById("showResults");
-    const vehicleDetails = document.getElementById("vehicleDetails");
-    const trimInput = document.getElementById("trim");
-    const engineInput = document.getElementById("engine");
-    const maintenanceSection = document.getElementById("maintenanceSection");
-
-    const currentYear = new Date().getFullYear();
-    for (let y = currentYear; y >= 1980; y--) {
-      const option = document.createElement("option");
-      option.value = y;
-      option.textContent = y;
-      yearDropdown.appendChild(option);
-    }
-
-    yearDropdown.addEventListener("change", () => {
-      const year = yearDropdown.value;
-      if (!year) return;
-      makeDropdown.disabled = true;
-      modelDropdown.disabled = true;
-      makeDropdown.innerHTML = '<option value="">Loading...</option>';
-
-      fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json`)
-        .then(res => res.json())
-        .then(data => {
-          const sortedMakes = data.Results.sort((a, b) => a.MakeName.localeCompare(b.MakeName));
-          makeDropdown.innerHTML = '<option value="">Select Make</option>';
-          sortedMakes.forEach(make => {
-            const option = document.createElement("option");
-            option.value = make.MakeName;
-            option.textContent = make.MakeName;
-            makeDropdown.appendChild(option);
-          });
-          makeDropdown.disabled = false;
-        });
-    });
-
-    makeDropdown.addEventListener("change", () => {
-      const year = yearDropdown.value;
-      const make = makeDropdown.value;
-      if (!year || !make) return;
-      modelDropdown.disabled = true;
-      modelDropdown.innerHTML = '<option value="">Loading...</option>';
-
-      fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`)
-        .then(res => res.json())
-        .then(data => {
-          const sortedModels = data.Results.sort((a, b) => a.Model_Name.localeCompare(b.Model_Name));
-          modelDropdown.innerHTML = '<option value="">Select Model</option>';
-          sortedModels.forEach(model => {
-            const option = document.createElement("option");
-            option.value = model.Model_Name;
-            option.textContent = model.Model_Name;
-            modelDropdown.appendChild(option);
-          });
-          modelDropdown.disabled = false;
-        });
-    });
-
-    lookupVinBtn.addEventListener("click", () => {
-      const vin = vinInput.value.trim().toUpperCase();
-      if (vin.length !== 17) {
-        alert("Please enter a valid 17-character VIN.");
-        return;
-      }
-      fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/${vin}?format=json`)
-        .then(res => res.json())
-        .then(data => {
-          const result = data.Results[0];
-          yearDropdown.value = result.ModelYear || "";
-          makeDropdown.innerHTML = `<option value="${result.Make}">${result.Make}</option>`;
-          makeDropdown.disabled = false;
-          modelDropdown.innerHTML = `<option value="${result.Model}">${result.Model}</option>`;
-          modelDropdown.disabled = false;
-          trimInput.value = result.Series || '';
-          engineInput.value = result.EngineModel || (result.EngineCylinders ? result.EngineCylinders + ' Cyl' : '');
-
-          vehicleDetails.innerHTML = `
-            <strong>Year:</strong> ${result.ModelYear} <br>
-            <strong>Make:</strong> ${result.Make} <br>
-            <strong>Model:</strong> ${result.Model} <br>
-            <strong>Trim:</strong> ${result.Series || 'N/A'} <br>
-            <strong>Engine:</strong> ${result.EngineModel || result.EngineCylinders + ' Cyl'} <br>
-            <strong>Fuel Type:</strong> ${result.FuelTypePrimary || 'N/A'} <br>
-            <strong>Body Class:</strong> ${result.BodyClass || 'N/A'} <br>
-          `;
-
-          displayMaintenance(result.ModelYear, result.Make, result.Model);
-        });
-    });
-
-    showResultsBtn.addEventListener("click", () => {
-      const year = yearDropdown.value;
-      const make = makeDropdown.value;
-      const model = modelDropdown.value;
-
-      if (!year || !make || !model) {
-        alert("Please select Year, Make, and Model before viewing results.");
-        return;
-      }
-
-      vehicleDetails.innerHTML = `
-        <strong>Year:</strong> ${year} <br>
-        <strong>Make:</strong> ${make} <br>
-        <strong>Model:</strong> ${model} <br>
-      `;
-
-      displayMaintenance(year, make, model);
-    });
-
-    function displayMaintenance(year, make, model) {
-      const key = `${year}_${make}_${model}`.replace(/\s+/g, '_');
-      const maintenanceData = {
-        "2015_Honda_Accord": {
-          maintenance: [
-            "Oil change every 5,000 miles",
-            "Tire rotation every 7,500 miles",
-            "Brake inspection every 10,000 miles"
-          ],
-          common_repairs: [
-            "Replace brake pads",
-            "Fix AC compressor",
-            "Replace battery"
-          ]
-        },
-        "2020_Toyota_Camry": {
-          maintenance: [
-            "Oil change every 10,000 miles",
-            "Inspect transmission fluid every 30,000 miles"
-          ],
-          common_repairs: [
-            "Replace cabin air filter",
-            "Battery replacement"
-          ]
-        }
-      };
-
-      const data = maintenanceData[key];
-      if (!data) {
-        maintenanceSection.innerHTML = `<strong>No maintenance data found for ${make} ${model}.</strong>`;
-        return;
-      }
-
-      maintenanceSection.innerHTML = `
-        <h3>Maintenance Schedule</h3>
-        <ul>${data.maintenance.map(item => `<li>${item}</li>`).join('')}</ul>
-        <h3>Common Repairs</h3>
-        <ul>${data.common_repairs.map(item => `<li>${item}</li>`).join('')}</ul>
-      `;
-    }
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,21 +1,40 @@
 body {
   font-family: Arial, sans-serif;
-  margin: 20px;
-  background: #f2f2f2;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 20px;
 }
-h1 {
-  text-align: center;
+.container {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  margin: auto;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
-.selector {
-  text-align: center;
-  margin-bottom: 20px;
+form label {
+  display: block;
+  margin-top: 10px;
 }
-.selector label,
-.selector select,
-.selector button {
-  margin: 5px;
-  padding: 5px;
+form select, form input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
 }
-.guide-section {
-  text-align: center;
+button {
+  margin-top: 15px;
+  padding: 10px;
+  width: 100%;
+  background-color: #0077cc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+.results {
+  margin-top: 20px;
+}
+.results ul {
+  padding-left: 20px;
 }
