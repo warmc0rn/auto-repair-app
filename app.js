@@ -1,6 +1,8 @@
 const yearDropdown = document.getElementById("year");
 const makeDropdown = document.getElementById("make");
 const modelDropdown = document.getElementById("model");
+const trimDropdown = document.getElementById("trim");
+const engineTypeDropdown = document.getElementById("engine-type");
 const vinInput = document.getElementById("vin");
 const lookupVinBtn = document.getElementById("lookupVin");
 
@@ -20,8 +22,12 @@ yearDropdown.addEventListener("change", () => {
 
   makeDropdown.disabled = true;
   modelDropdown.disabled = true;
+  trimDropdown.disabled = true;
+  engineTypeDropdown.disabled = true;
   makeDropdown.innerHTML = '<option value="">Loading...</option>';
   modelDropdown.innerHTML = '<option value="">Select Model</option>';
+  trimDropdown.innerHTML = '<option value="">Select Trim</option>';
+  engineTypeDropdown.innerHTML = '<option value="">Select Engine Type</option>';
 
   fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleModelYear/modelyear/${year}?format=json`)
     .then(res => res.json())
@@ -48,7 +54,11 @@ makeDropdown.addEventListener("change", () => {
   if (!year || !make) return;
 
   modelDropdown.disabled = true;
+  trimDropdown.disabled = true;
+  engineTypeDropdown.disabled = true;
   modelDropdown.innerHTML = '<option value="">Loading...</option>';
+  trimDropdown.innerHTML = '<option value="">Select Trim</option>';
+  engineTypeDropdown.innerHTML = '<option value="">Select Engine Type</option>';
 
   fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`)
     .then(res => res.json())
@@ -65,6 +75,50 @@ makeDropdown.addEventListener("change", () => {
     .catch(err => {
       console.error("Error loading models:", err);
       modelDropdown.innerHTML = '<option value="">Error loading models</option>';
+    });
+});
+
+// Load Trim and Engine Type when Model is selected
+modelDropdown.addEventListener("change", () => {
+  const year = yearDropdown.value;
+  const make = makeDropdown.value;
+  const model = modelDropdown.value;
+  if (!year || !make || !model) return;
+
+  trimDropdown.disabled = true;
+  engineTypeDropdown.disabled = true;
+  trimDropdown.innerHTML = '<option value="">Loading...</option>';
+  engineTypeDropdown.innerHTML = '<option value="">Loading...</option>';
+
+  // Replace with an actual API for trims and engine types
+  // Example of hardcoded trims and engine types
+  fetch(`https://example.com/api/vehicle-trims?year=${year}&make=${make}&model=${model}`)
+    .then(res => res.json())
+    .then(data => {
+      trimDropdown.innerHTML = '<option value="">Select Trim</option>';
+      engineTypeDropdown.innerHTML = '<option value="">Select Engine Type</option>';
+
+      data.trims.forEach(trim => {
+        const option = document.createElement("option");
+        option.value = trim;
+        option.textContent = trim;
+        trimDropdown.appendChild(option);
+      });
+
+      data.engineTypes.forEach(engine => {
+        const option = document.createElement("option");
+        option.value = engine;
+        option.textContent = engine;
+        engineTypeDropdown.appendChild(option);
+      });
+
+      trimDropdown.disabled = false;
+      engineTypeDropdown.disabled = false;
+    })
+    .catch(err => {
+      console.error("Error loading trims and engine types:", err);
+      trimDropdown.innerHTML = '<option value="">Error loading trims</option>';
+      engineTypeDropdown.innerHTML = '<option value="">Error loading engine types</option>';
     });
 });
 
@@ -97,6 +151,38 @@ lookupVinBtn.addEventListener("click", () => {
 
       modelDropdown.innerHTML = `<option value="${model}">${model}</option>`;
       modelDropdown.disabled = false;
+
+      // Load trims and engine types
+      trimDropdown.disabled = true;
+      engineTypeDropdown.disabled = true;
+      fetch(`https://example.com/api/vehicle-trims?year=${year}&make=${make}&model=${model}`)
+        .then(res => res.json())
+        .then(data => {
+          trimDropdown.innerHTML = '<option value="">Select Trim</option>';
+          engineTypeDropdown.innerHTML = '<option value="">Select Engine Type</option>';
+
+          data.trims.forEach(trim => {
+            const option = document.createElement("option");
+            option.value = trim;
+            option.textContent = trim;
+            trimDropdown.appendChild(option);
+          });
+
+          data.engineTypes.forEach(engine => {
+            const option = document.createElement("option");
+            option.value = engine;
+            option.textContent = engine;
+            engineTypeDropdown.appendChild(option);
+          });
+
+          trimDropdown.disabled = false;
+          engineTypeDropdown.disabled = false;
+        })
+        .catch(err => {
+          console.error("Error loading trims and engine types:", err);
+          trimDropdown.innerHTML = '<option value="">Error loading trims</option>';
+          engineTypeDropdown.innerHTML = '<option value="">Error loading engine types</option>';
+        });
     })
     .catch(err => {
       console.error("Error decoding VIN:", err);
