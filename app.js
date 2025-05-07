@@ -13,7 +13,7 @@ for (let y = currentYear; y >= 1995; y--) {
   yearDropdown.appendChild(option);
 }
 
-// When user selects a year, load makes
+// Load Makes when Year is selected
 yearDropdown.addEventListener("change", () => {
   const year = yearDropdown.value;
   if (!year) return;
@@ -34,10 +34,14 @@ yearDropdown.addEventListener("change", () => {
         makeDropdown.appendChild(option);
       });
       makeDropdown.disabled = false;
+    })
+    .catch(err => {
+      console.error("Error loading makes:", err);
+      makeDropdown.innerHTML = '<option value="">Error loading makes</option>';
     });
 });
 
-// When user selects a make, load models
+// Load Models when Make is selected
 makeDropdown.addEventListener("change", () => {
   const year = yearDropdown.value;
   const make = makeDropdown.value;
@@ -57,6 +61,10 @@ makeDropdown.addEventListener("change", () => {
         modelDropdown.appendChild(option);
       });
       modelDropdown.disabled = false;
+    })
+    .catch(err => {
+      console.error("Error loading models:", err);
+      modelDropdown.innerHTML = '<option value="">Error loading models</option>';
     });
 });
 
@@ -77,18 +85,21 @@ lookupVinBtn.addEventListener("click", () => {
       const model = result.Model;
 
       if (!year || !make || !model) {
-        alert("VIN lookup failed. Please check the number.");
+        alert("VIN lookup failed. Please check the VIN.");
         return;
       }
 
+      // Set dropdowns based on VIN result
       yearDropdown.value = year;
+
       makeDropdown.innerHTML = `<option value="${make}">${make}</option>`;
       makeDropdown.disabled = false;
+
       modelDropdown.innerHTML = `<option value="${model}">${model}</option>`;
       modelDropdown.disabled = false;
     })
     .catch(err => {
-      alert("Error decoding VIN.");
-      console.error(err);
+      console.error("Error decoding VIN:", err);
+      alert("Failed to decode VIN.");
     });
 });
