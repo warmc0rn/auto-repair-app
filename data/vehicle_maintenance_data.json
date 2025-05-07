@@ -1,0 +1,17 @@
+{
+  "Honda": {
+    "Civic": {
+      "2020": {
+        "trim": {
+          "EX": {
+            "maintenance": [
+              { "interval": 5000, "task": "Oil Change" },
+              { "interval": 15000, "task": "Tire Rotation" },
+              { "interval": 30000, "task": "Replace Air Filter" }
+            ]
+          }
+        }
+      }
+    }
+  }
+}
