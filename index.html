@@ -53,6 +53,12 @@
       padding: 10px;
       border-radius: 5px;
     }
+    .section {
+      margin-top: 20px;
+    }
+    ul {
+      padding-left: 20px;
+    }
   </style>
 </head>
 <body>
@@ -85,6 +91,8 @@
     <input type="text" id="engine" disabled>
 
     <div class="info-box" id="vehicleDetails"></div>
+
+    <div class="section" id="maintenanceSection"></div>
   </div>
 
   <script>
@@ -96,6 +104,7 @@
     const vehicleDetails = document.getElementById("vehicleDetails");
     const trimInput = document.getElementById("trim");
     const engineInput = document.getElementById("engine");
+    const maintenanceSection = document.getElementById("maintenanceSection");
 
     const currentYear = new Date().getFullYear();
     for (let y = currentYear; y >= 1980; y--) {
@@ -159,6 +168,14 @@
         .then(res => res.json())
         .then(data => {
           const result = data.Results[0];
+          yearDropdown.value = result.ModelYear || "";
+          makeDropdown.innerHTML = `<option value="${result.Make}">${result.Make}</option>`;
+          makeDropdown.disabled = false;
+          modelDropdown.innerHTML = `<option value="${result.Model}">${result.Model}</option>`;
+          modelDropdown.disabled = false;
+          trimInput.value = result.Series || '';
+          engineInput.value = result.EngineModel || (result.EngineCylinders ? result.EngineCylinders + ' Cyl' : '');
+
           vehicleDetails.innerHTML = `
             <strong>Year:</strong> ${result.ModelYear} <br>
             <strong>Make:</strong> ${result.Make} <br>
@@ -168,15 +185,51 @@
             <strong>Fuel Type:</strong> ${result.FuelTypePrimary || 'N/A'} <br>
             <strong>Body Class:</strong> ${result.BodyClass || 'N/A'} <br>
           `;
-          yearDropdown.value = result.ModelYear || "";
-          makeDropdown.innerHTML = `<option value="${result.Make}">${result.Make}</option>`;
-          makeDropdown.disabled = false;
-          modelDropdown.innerHTML = `<option value="${result.Model}">${result.Model}</option>`;
-          modelDropdown.disabled = false;
-          trimInput.value = result.Series || '';
-          engineInput.value = result.EngineModel || (result.EngineCylinders ? result.EngineCylinders + ' Cyl' : '');
+
+          displayMaintenance(result.ModelYear, result.Make, result.Model);
         });
     });
+
+    function displayMaintenance(year, make, model) {
+      const key = `${year}_${make}_${model}`.replace(/\s+/g, '_');
+      const maintenanceData = {
+        "2015_Honda_Accord": {
+          maintenance: [
+            "Oil change every 5,000 miles",
+            "Tire rotation every 7,500 miles",
+            "Brake inspection every 10,000 miles"
+          ],
+          common_repairs: [
+            "Replace brake pads",
+            "Fix AC compressor",
+            "Replace battery"
+          ]
+        },
+        "2020_Toyota_Camry": {
+          maintenance: [
+            "Oil change every 10,000 miles",
+            "Inspect transmission fluid every 30,000 miles"
+          ],
+          common_repairs: [
+            "Replace cabin air filter",
+            "Battery replacement"
+          ]
+        }
+      };
+
+      const data = maintenanceData[key];
+      if (!data) {
+        maintenanceSection.innerHTML = `<strong>No maintenance data found for ${make} ${model}.</strong>`;
+        return;
+      }
+
+      maintenanceSection.innerHTML = `
+        <h3>Maintenance Schedule</h3>
+        <ul>${data.maintenance.map(item => `<li>${item}</li>`).join('')}</ul>
+        <h3>Common Repairs</h3>
+        <ul>${data.common_repairs.map(item => `<li>${item}</li>`).join('')}</ul>
+      `;
+    }
   </script>
 </body>
 </html>
