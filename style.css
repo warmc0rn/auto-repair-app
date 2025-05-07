@@ -7,10 +7,12 @@ h1 {
   text-align: center;
 }
 .selector {
-  margin-bottom: 20px;
   text-align: center;
+  margin-bottom: 20px;
 }
-.selector label, .selector select, .selector button {
+.selector label,
+.selector select,
+.selector button {
   margin: 5px;
   padding: 5px;
 }
