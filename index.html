@@ -78,6 +78,12 @@
       <option value="">Select Model</option>
     </select>
 
+    <label for="trim">Trim</label>
+    <input type="text" id="trim" disabled>
+
+    <label for="engine">Engine</label>
+    <input type="text" id="engine" disabled>
+
     <div class="info-box" id="vehicleDetails"></div>
   </div>
 
@@ -88,8 +94,9 @@
     const vinInput = document.getElementById("vin");
     const lookupVinBtn = document.getElementById("lookupVin");
     const vehicleDetails = document.getElementById("vehicleDetails");
+    const trimInput = document.getElementById("trim");
+    const engineInput = document.getElementById("engine");
 
-    // Populate Year dropdown
     const currentYear = new Date().getFullYear();
     for (let y = currentYear; y >= 1980; y--) {
       const option = document.createElement("option");
@@ -98,7 +105,6 @@
       yearDropdown.appendChild(option);
     }
 
-    // Fetch Makes based on year
     yearDropdown.addEventListener("change", () => {
       const year = yearDropdown.value;
       if (!year) return;
@@ -109,8 +115,9 @@
       fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json`)
         .then(res => res.json())
         .then(data => {
+          const sortedMakes = data.Results.sort((a, b) => a.MakeName.localeCompare(b.MakeName));
           makeDropdown.innerHTML = '<option value="">Select Make</option>';
-          data.Results.forEach(make => {
+          sortedMakes.forEach(make => {
             const option = document.createElement("option");
             option.value = make.MakeName;
             option.textContent = make.MakeName;
@@ -120,7 +127,6 @@
         });
     });
 
-    // Fetch Models based on make and year
     makeDropdown.addEventListener("change", () => {
       const year = yearDropdown.value;
       const make = makeDropdown.value;
@@ -131,8 +137,9 @@
       fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`)
         .then(res => res.json())
         .then(data => {
+          const sortedModels = data.Results.sort((a, b) => a.Model_Name.localeCompare(b.Model_Name));
           modelDropdown.innerHTML = '<option value="">Select Model</option>';
-          data.Results.forEach(model => {
+          sortedModels.forEach(model => {
             const option = document.createElement("option");
             option.value = model.Model_Name;
             option.textContent = model.Model_Name;
@@ -142,7 +149,6 @@
         });
     });
 
-    // VIN Lookup
     lookupVinBtn.addEventListener("click", () => {
       const vin = vinInput.value.trim().toUpperCase();
       if (vin.length !== 17) {
@@ -158,7 +164,7 @@
             <strong>Make:</strong> ${result.Make} <br>
             <strong>Model:</strong> ${result.Model} <br>
             <strong>Trim:</strong> ${result.Series || 'N/A'} <br>
-            <strong>Engine:</strong> ${result.EngineModel || 'N/A'} <br>
+            <strong>Engine:</strong> ${result.EngineModel || result.EngineCylinders + ' Cyl'} <br>
             <strong>Fuel Type:</strong> ${result.FuelTypePrimary || 'N/A'} <br>
             <strong>Body Class:</strong> ${result.BodyClass || 'N/A'} <br>
           `;
@@ -167,6 +173,8 @@
           makeDropdown.disabled = false;
           modelDropdown.innerHTML = `<option value="${result.Model}">${result.Model}</option>`;
           modelDropdown.disabled = false;
+          trimInput.value = result.Series || '';
+          engineInput.value = result.EngineModel || (result.EngineCylinders ? result.EngineCylinders + ' Cyl' : '');
         });
     });
   </script>
