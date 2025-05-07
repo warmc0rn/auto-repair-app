@@ -3,37 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Auto Repair App</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
+  <title>Car Selector</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+    }
+    select {
+      width: 200px;
+      padding: 8px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Auto Repair Guide</h1>
 
-  <div class="selector">
-    <label for="year">Year:</label>
-    <select id="year">
-      <option value="">Select Year</option>
-    </select>
+  <h1>Select Your Vehicle</h1>
 
-    <label for="make">Make:</label>
-    <select id="make" disabled>
-      <option value="">Select Make</option>
-    </select>
+  <label for="year">Year:</label>
+  <select id="year">
+    <option value="">Select Year</option>
+  </select>
 
-    <label for="model">Model:</label>
-    <select id="model" disabled>
-      <option value="">Select Model</option>
-    </select>
+  <label for="make">Make:</label>
+  <select id="make" disabled>
+    <option value="">Select Make</option>
+  </select>
 
-    <button onclick="loadRepair()">Load Guide</button>
-  </div>
-
-  <div id="guide" class="guide-section" style="display:none;">
-    <h2>Repair Guide</h2>
-    <ul id="steps"></ul>
-    <iframe id="video" width="560" height="315" frameborder="0" allowfullscreen></iframe>
-  </div>
+  <label for="model">Model:</label>
+  <select id="model" disabled>
+    <option value="">Select Model</option>
+  </select>
 
   <script src="app.js"></script>
 </body>
