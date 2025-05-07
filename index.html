@@ -1,44 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vehicle Selector</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Lookup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 100%;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .info-box {
+      margin-top: 20px;
+      background-color: #e9ecef;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <h2>Vehicle Lookup</h2>
 
-  <h2>Select Your Vehicle</h2>
+    <label for="vin">Enter VIN</label>
+    <input type="text" id="vin" placeholder="17-character VIN">
+    <button id="lookupVin">Lookup VIN</button>
 
-  <label for="vin">OR Enter VIN:</label>
-  <input type="text" id="vin" placeholder="Enter 17-digit VIN" maxlength="17" />
-  <button id="lookupVin">Lookup VIN</button>
+    <label for="year">Select Year</label>
+    <select id="year">
+      <option value="">Select Year</option>
+    </select>
 
-  <label for="year">Year:</label>
-  <select id="year">
-    <option value="">Select Year</option>
-  </select>
+    <label for="make">Select Make</label>
+    <select id="make" disabled>
+      <option value="">Select Make</option>
+    </select>
 
-  <label for="make">Make:</label>
-  <select id="make" disabled>
-    <option value="">Select Make</option>
-  </select>
+    <label for="model">Select Model</label>
+    <select id="model" disabled>
+      <option value="">Select Model</option>
+    </select>
 
-  <label for="model">Model:</label>
-  <select id="model" disabled>
-    <option value="">Select Model</option>
-  </select>
+    <div class="info-box" id="vehicleDetails"></div>
+  </div>
 
-  <label for="trim">Trim:</label>
-  <select id="trim" disabled>
-    <option value="">Select Trim</option>
-  </select>
+  <script>
+    const yearDropdown = document.getElementById("year");
+    const makeDropdown = document.getElementById("make");
+    const modelDropdown = document.getElementById("model");
+    const vinInput = document.getElementById("vin");
+    const lookupVinBtn = document.getElementById("lookupVin");
+    const vehicleDetails = document.getElementById("vehicleDetails");
 
-  <label for="engine-type">Engine Type:</label>
-  <select id="engine-type" disabled>
-    <option value="">Select Engine Type</option>
-  </select>
+    // Populate Year dropdown
+    const currentYear = new Date().getFullYear();
+    for (let y = currentYear; y >= 1980; y--) {
+      const option = document.createElement("option");
+      option.value = y;
+      option.textContent = y;
+      yearDropdown.appendChild(option);
+    }
 
-  <script src="app.js"></script>
+    // Fetch Makes based on year
+    yearDropdown.addEventListener("change", () => {
+      const year = yearDropdown.value;
+      if (!year) return;
+      makeDropdown.disabled = true;
+      modelDropdown.disabled = true;
+      makeDropdown.innerHTML = '<option value="">Loading...</option>';
+
+      fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json`)
+        .then(res => res.json())
+        .then(data => {
+          makeDropdown.innerHTML = '<option value="">Select Make</option>';
+          data.Results.forEach(make => {
+            const option = document.createElement("option");
+            option.value = make.MakeName;
+            option.textContent = make.MakeName;
+            makeDropdown.appendChild(option);
+          });
+          makeDropdown.disabled = false;
+        });
+    });
+
+    // Fetch Models based on make and year
+    makeDropdown.addEventListener("change", () => {
+      const year = yearDropdown.value;
+      const make = makeDropdown.value;
+      if (!year || !make) return;
+      modelDropdown.disabled = true;
+      modelDropdown.innerHTML = '<option value="">Loading...</option>';
+
+      fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`)
+        .then(res => res.json())
+        .then(data => {
+          modelDropdown.innerHTML = '<option value="">Select Model</option>';
+          data.Results.forEach(model => {
+            const option = document.createElement("option");
+            option.value = model.Model_Name;
+            option.textContent = model.Model_Name;
+            modelDropdown.appendChild(option);
+          });
+          modelDropdown.disabled = false;
+        });
+    });
+
+    // VIN Lookup
+    lookupVinBtn.addEventListener("click", () => {
+      const vin = vinInput.value.trim().toUpperCase();
+      if (vin.length !== 17) {
+        alert("Please enter a valid 17-character VIN.");
+        return;
+      }
+      fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/${vin}?format=json`)
+        .then(res => res.json())
+        .then(data => {
+          const result = data.Results[0];
+          vehicleDetails.innerHTML = `
+            <strong>Year:</strong> ${result.ModelYear} <br>
+            <strong>Make:</strong> ${result.Make} <br>
+            <strong>Model:</strong> ${result.Model} <br>
+            <strong>Trim:</strong> ${result.Series || 'N/A'} <br>
+            <strong>Engine:</strong> ${result.EngineModel || 'N/A'} <br>
+            <strong>Fuel Type:</strong> ${result.FuelTypePrimary || 'N/A'} <br>
+            <strong>Body Class:</strong> ${result.BodyClass || 'N/A'} <br>
+          `;
+          yearDropdown.value = result.ModelYear || "";
+          makeDropdown.innerHTML = `<option value="${result.Make}">${result.Make}</option>`;
+          makeDropdown.disabled = false;
+          modelDropdown.innerHTML = `<option value="${result.Model}">${result.Model}</option>`;
+          modelDropdown.disabled = false;
+        });
+    });
+  </script>
 </body>
 </html>
