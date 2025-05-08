@@ -2,35 +2,37 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vehicle Maintenance Lookup</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vehicle Maintenance & Repair Lookup</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="container">
-    <h1>Select Your Vehicle</h1>
-    <form id="vehicle-form">
-      <label for="vin">Enter VIN (optional):</label>
-      <input type="text" id="vin" placeholder="e.g., 1HGCM82633A123456" />
+    <h1>Vehicle Maintenance & Repair Lookup</h1>
 
-      <p>— OR —</p>
+    <form id="vehicle-form">
+      <label for="vin">VIN:</label>
+      <input type="text" id="vin" name="vin" maxlength="17" />
 
       <label for="year">Year:</label>
-      <select id="year"><option value="">Select Year</option></select>
+      <select id="year" required></select>
 
       <label for="make">Make:</label>
-      <select id="make" disabled><option value="">Select Make</option></select>
+      <select id="make" required disabled></select>
 
       <label for="model">Model:</label>
-      <select id="model" disabled><option value="">Select Model</option></select>
+      <select id="model" required disabled></select>
 
-      <label for="trim">Trim/Engine:</label>
-      <select id="trim" disabled><option value="">Select Trim</option></select>
+      <label for="type">Type:</label>
+      <select id="type" required disabled></select>
 
-      <button type="button" id="submit-btn">View Maintenance</button>
+      <label for="engine">Engine:</label>
+      <select id="engine" required disabled></select>
+
+      <button type="submit">Get Maintenance & Repair Info</button>
     </form>
 
-    <div id="maintenance-results"></div>
+    <div id="results"></div>
   </div>
 
   <script src="app.js"></script>
