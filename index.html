@@ -34,6 +34,28 @@
     <button id="submitBtn">View Maintenance & Repairs</button>
     <div id="results"></div>
   </div>
+
+  <script>
+    // Sort helper function
+    function sortSelect(select) {
+      let options = Array.from(select.options)
+        .filter(option => option.value)
+        .sort((a, b) => a.text.localeCompare(b.text));
+      select.innerHTML = '<option value="">' + select.options[0].text + '</option>';
+      options.forEach(option => select.appendChild(option));
+    }
+
+    // Example: Call sortSelect on populated selects
+    document.addEventListener('DOMContentLoaded', () => {
+      const makeSelect = document.getElementById('make');
+      const modelSelect = document.getElementById('model');
+
+      // After populating each dropdown via API, call sortSelect()
+      // Example:
+      // populateMakeDropdown().then(() => sortSelect(makeSelect));
+    });
+  </script>
+
   <script src="app.js"></script>
 </body>
 </html>
