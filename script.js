@@ -1,130 +1,129 @@
-const yearSelect = document.getElementById('year');
-const makeSelect = document.getElementById('make');
-const modelSelect = document.getElementById('model');
-const trimSelect = document.getElementById('trim');
-const vinInput = document.getElementById('vin');
-const submitBtn = document.getElementById('submit-btn');
-const resultsContainer = document.getElementById('maintenance-results');
+// script.js
 
-// Populate year dropdown
-for (let y = 2025; y >= 1990; y--) {
-  const option = document.createElement('option');
-  option.value = y;
-  option.textContent = y;
-  yearSelect.appendChild(option);
+const yearSelect = document.getElementById("yearSelect");
+const makeSelect = document.getElementById("makeSelect");
+const modelSelect = document.getElementById("modelSelect");
+const trimSelect = document.getElementById("trimSelect");
+const engineSelect = document.getElementById("engineSelect");
+const vinInput = document.getElementById("vinInput");
+const submitBtn = document.getElementById("submitBtn");
+const results = document.getElementById("results");
+
+function populateYears() {
+  const currentYear = new Date().getFullYear();
+  for (let y = currentYear; y >= 1980; y--) {
+    yearSelect.add(new Option(y, y));
+  }
 }
 
-// Fetch vehicle data from NHTSA based on selection
-yearSelect.addEventListener('change', async () => {
-  const year = yearSelect.value;
-  makeSelect.innerHTML = '<option value="">Select Make</option>';
-  modelSelect.innerHTML = '<option value="">Select Model</option>';
-  trimSelect.innerHTML = '<option value="">Select Trim</option>';
-  makeSelect.disabled = modelSelect.disabled = trimSelect.disabled = true;
+function fetchMakes(year) {
+  return fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json`)
+    .then(res => res.json())
+    .then(data => {
+      makeSelect.innerHTML = '<option value="">Select Make</option>';
+      data.Results.sort((a, b) => a.MakeName.localeCompare(b.MakeName)).forEach(make => {
+        const opt = document.createElement("option");
+        opt.value = make.MakeName;
+        opt.textContent = make.MakeName;
+        makeSelect.appendChild(opt);
+      });
+      makeSelect.disabled = false;
+    });
+}
 
-  if (!year) return;
+function fetchModels(year, make) {
+  return fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`)
+    .then(res => res.json())
+    .then(data => {
+      modelSelect.innerHTML = '<option value="">Select Model</option>';
+      data.Results.sort((a, b) => a.Model_Name.localeCompare(b.Model_Name)).forEach(model => {
+        const opt = document.createElement("option");
+        opt.value = model.Model_Name;
+        opt.textContent = model.Model_Name;
+        modelSelect.appendChild(opt);
+      });
+      modelSelect.disabled = false;
+    });
+}
 
-  const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json`);
-  const data = await res.json();
-  const makes = data.Results.map(m => m.MakeName).sort();
-  makes.forEach(make => {
-    const opt = document.createElement('option');
-    opt.value = make;
-    opt.textContent = make;
-    makeSelect.appendChild(opt);
-  });
-  makeSelect.disabled = false;
+function fetchTrims(year, make, model) {
+  return fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetVehicleTypesForMakeModelYear/make/${make}/model/${model}/modelyear/${year}?format=json`)
+    .then(res => res.json())
+    .then(data => {
+      trimSelect.innerHTML = '<option value="">Select Trim</option>';
+      data.Results.forEach(trim => {
+        const opt = document.createElement("option");
+        opt.value = trim.VehicleTypeName;
+        opt.textContent = trim.VehicleTypeName;
+        trimSelect.appendChild(opt);
+      });
+      trimSelect.disabled = false;
+    });
+}
+
+function fetchEngines(year, make, model, trim) {
+  return fetch(`/api/engines?year=${year}&make=${make}&model=${model}&trim=${trim}`)
+    .then(res => res.json())
+    .then(data => {
+      engineSelect.innerHTML = '<option value="">Select Engine</option>';
+      data.data.forEach(engine => {
+        const opt = document.createElement("option");
+        opt.value = engine.engine_name;
+        opt.textContent = `${engine.engine_name} (${engine.horsepower} HP, ${engine.fuel_type})`;
+        engineSelect.appendChild(opt);
+      });
+      engineSelect.disabled = false;
+    })
+    .catch(() => {
+      engineSelect.innerHTML = '<option value="">Engine data unavailable</option>';
+      engineSelect.disabled = true;
+    });
+}
+
+vinInput.addEventListener("change", () => {
+  const vin = vinInput.value.trim();
+  if (vin.length === 17) {
+    fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vin}?format=json`)
+      .then(res => res.json())
+      .then(data => {
+        const info = data.Results[0];
+        yearSelect.value = info.ModelYear;
+        fetchMakes(info.ModelYear).then(() => {
+          makeSelect.value = info.Make;
+          fetchModels(info.ModelYear, info.Make).then(() => {
+            modelSelect.value = info.Model;
+            fetchTrims(info.ModelYear, info.Make, info.Model).then(() => {
+              trimSelect.value = info.VehicleType;
+              fetchEngines(info.ModelYear, info.Make, info.Model, info.VehicleType);
+            });
+          });
+        });
+      });
+  }
 });
 
-makeSelect.addEventListener('change', async () => {
-  const year = yearSelect.value;
-  const make = makeSelect.value;
-  modelSelect.innerHTML = '<option value="">Select Model</option>';
-  trimSelect.innerHTML = '<option value="">Select Trim</option>';
-  modelSelect.disabled = trimSelect.disabled = true;
-
-  if (!make) return;
-
-  const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeYear/make/${make}/modelyear/${year}?format=json`);
-  const data = await res.json();
-  const models = [...new Set(data.Results.map(m => m.Model_Name))].sort();
-  models.forEach(model => {
-    const opt = document.createElement('option');
-    opt.value = model;
-    opt.textContent = model;
-    modelSelect.appendChild(opt);
-  });
-  modelSelect.disabled = false;
-});
-
-modelSelect.addEventListener('change', async () => {
+submitBtn.addEventListener("click", () => {
   const year = yearSelect.value;
   const make = makeSelect.value;
   const model = modelSelect.value;
-  trimSelect.innerHTML = '<option value="">Select Trim</option>';
-  trimSelect.disabled = true;
+  const trim = trimSelect.value;
+  const engine = engineSelect.value;
 
-  if (!model) return;
-
-  const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/GetVehicleTypesForMakeModelYear/make/${make}/model/${model}/modelyear/${year}?format=json`);
-  const data = await res.json();
-  const trims = [...new Set(data.Results.map(v => v.VehicleTypeName))].sort();
-  trims.forEach(trim => {
-    const opt = document.createElement('option');
-    opt.value = trim;
-    opt.textContent = trim;
-    trimSelect.appendChild(opt);
-  });
-  trimSelect.disabled = false;
-});
-
-// Submit button
-submitBtn.addEventListener('click', async () => {
-  resultsContainer.innerHTML = '';
-  const vin = vinInput.value.trim();
-  let make, model, year, trim;
-
-  if (vin) {
-    const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVin/${vin}?format=json`);
-    const data = res.ok ? await res.json() : null;
-    const info = data?.Results || [];
-
-    year = info.find(x => x.Variable === "Model Year")?.Value;
-    make = info.find(x => x.Variable === "Make")?.Value;
-    model = info.find(x => x.Variable === "Model")?.Value;
-    trim = info.find(x => x.Variable === "Trim")?.Value || "Base";
-  } else {
-    year = yearSelect.value;
-    make = makeSelect.value;
-    model = modelSelect.value;
-    trim = trimSelect.value || "Base";
-  }
-
-  if (!year || !make || !model) {
-    resultsContainer.innerHTML = '<p>Please select a complete vehicle.</p>';
-    return;
-  }
-
-  const url = 'https://your-username.github.io/your-repo/data/vehicle_maintenance_data.json';
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    const tasks = data?.[make]?.[model]?.[year]?.trim?.[trim]?.maintenance;
-
-    if (Array.isArray(tasks) && tasks.length > 0) {
-      resultsContainer.innerHTML = '<h3>Maintenance & Repair Tasks:</h3>';
-      const list = document.createElement('ul');
-      tasks.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = `${item.interval} miles - ${item.task}`;
-        list.appendChild(li);
+  if (year && make && model && trim && engine) {
+    fetch(`https://api.vehicledb.io/maintenance?year=${year}&make=${make}&model=${model}&trim=${trim}&engine=${engine}&apikey=83656df82b8e11f098a60242ac120002`)
+      .then(res => res.json())
+      .then(data => {
+        results.innerHTML = '<h3>Maintenance & Repairs</h3>';
+        data.maintenance.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `<strong>${item.service}</strong>: ${item.description}`;
+          results.appendChild(div);
+        });
       });
-      resultsContainer.appendChild(list);
-    } else {
-      resultsContainer.innerHTML = '<p>No maintenance data available for this vehicle.</p>';
-    }
-  } catch (err) {
-    console.error(err);
-    resultsContainer.innerHTML = '<p>Error retrieving maintenance data.</p>';
+  } else {
+    alert("Please complete all selections first.");
   }
 });
+
+populateYears();
